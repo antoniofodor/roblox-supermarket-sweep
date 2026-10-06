@@ -1,0 +1,530 @@
+<title>Supermarket Sweep MVP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: a build sheet. What we're testing, the one-screen rulebook, the store floor plan, the in/out list, starting numbers, milestones and the playtest scorecard. */
+:root {
+  --bg: #F3F1E8; --surface: #FFFFFF; --ink: #1D2321; --muted: #5C655F; --line: #D6D2C2; --chip: #ECE8D9; --focus: #1E6FD9;
+  --shop: #E9C53A; --good: #2F7D4F; --warn: #A15C00; --stop: #B5362A;
+  --floor: #F7F4EA; --love: #D9467F; --shelf: #8FB6D9; --fridge: #9ED9F5; --till: #A6CF4F; --door: #F78154; --hot: #E9C53A;
+  --on: #15201C;
+  --display: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #181B19; --surface: #232826; --ink: #ECEFEA; --muted: #A5AEA8; --line: #3A403C; --chip: #2E3430; --focus: #7DB3FF; --good: #7BD69E; --warn: #F0B35A; --stop: #FF8A7A; --floor: #2A2F2C; --love: #FF8FBA; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --love: #FF8FBA; --bg: #181B19; --surface: #232826; --ink: #ECEFEA; --muted: #A5AEA8; --line: #3A403C; --chip: #2E3430; --focus: #7DB3FF; --good: #7BD69E; --warn: #F0B35A; --stop: #FF8A7A; --floor: #2A2F2C; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15.5px; line-height: 1.55; }
+.wrap { max-width: 1060px; margin: 0 auto; padding-inline: 18px; padding-block: 28px 72px; }
+h1 { font-family: var(--display); font-weight: 800; font-size: clamp(34px, 5.5vw, 54px); line-height: 1.02; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--display); font-weight: 800; font-size: clamp(24px, 3.4vw, 32px); line-height: 1.15; margin: 38px 0 6px; text-wrap: balance; }
+h4 { font-family: var(--display); font-weight: 800; font-size: 18px; margin: 0 0 4px; }
+p { margin: 6px 0; max-width: 72ch; }
+.eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; color: var(--muted); }
+.lede { color: var(--muted); max-width: 70ch; margin-top: 10px; }
+.receipt { margin-top: 18px; background: var(--surface); border: 1px dashed var(--line); border-radius: 6px; padding: 14px 18px; font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 14px; max-width: 560px; }
+.receipt .row { display: flex; justify-content: space-between; gap: 12px; }
+.receipt .row span:last-child { font-variant-numeric: tabular-nums; text-align: right; }
+.receipt hr { border: 0; border-top: 1px dashed var(--line); margin: 8px 0; }
+.receipt b { font-weight: 700; }
+
+.grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+@media (max-width: 760px) { .grid2 { grid-template-columns: minmax(0, 1fr); } }
+.box { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; min-width: 0; }
+ul, ol { margin: 4px 0; padding-left: 20px; }
+li { margin: 4px 0; }
+
+.qs { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-top: 10px; }
+.qs .q { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; min-width: 0; }
+.qs .q b { font-family: var(--display); font-size: 17px; display: block; line-height: 1.25; }
+.qs .q span { color: var(--muted); font-size: 14px; }
+
+.rules { counter-reset: r; list-style: none; padding: 0; display: grid; gap: 8px; margin-top: 10px; }
+.rules li { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px 10px 52px; position: relative; margin: 0; }
+.rules li::before { counter-increment: r; content: counter(r); position: absolute; left: 12px; top: 10px; width: 28px; height: 28px; border-radius: 50%; background: var(--shop); color: var(--on); font-family: var(--display); font-weight: 800; display: grid; place-items: center; }
+
+.timeline { margin-top: 12px; }
+.bar { display: flex; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); }
+.bar div { padding: 8px; color: var(--on); font-size: 13px; line-height: 1.3; min-width: 0; }
+.bar b { display: block; font-family: var(--display); font-size: 15px; }
+.ticks { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
+@media (max-width: 640px) { .bar { flex-direction: column; } .bar div { flex: none !important; } .ticks { display: none; } }
+
+.planbox { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px; margin-top: 10px; }
+#plan { display: block; width: 100%; min-width: 600px; height: auto; }
+#plan text { font-family: var(--body); font-size: 12px; fill: var(--on); }
+#plan .lab { fill: var(--muted); font-size: 12px; }
+#plan .big { font-family: var(--display); font-weight: 800; font-size: 14px; }
+
+.inout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; margin-top: 10px; }
+@media (max-width: 700px) { .inout { grid-template-columns: minmax(0, 1fr); } }
+.inout .box h4 { display: flex; align-items: center; gap: 8px; }
+.inout .in h4 { color: var(--good); }
+.inout .out h4 { color: var(--stop); }
+.inout .out li { color: var(--muted); }
+
+.tablebox { overflow-x: auto; margin-top: 10px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+tr:last-child td { border-bottom: 0; }
+th { font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); font-weight: 700; background: var(--chip); }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 700; }
+td code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; background: var(--chip); padding: 1px 6px; border-radius: 6px; }
+
+.ms { display: grid; gap: 10px; margin-top: 10px; }
+.ms .m { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 16px; }
+@media (max-width: 560px) { .ms .m { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
+.ms .m .tag { font-family: var(--display); font-weight: 800; font-size: 20px; line-height: 1.1; }
+.ms .m .tag small { display: block; font-family: var(--body); font-weight: 700; font-size: 12px; color: var(--muted); letter-spacing: .05em; text-transform: uppercase; }
+.ms .m .test { margin-top: 6px; font-size: 14px; color: var(--muted); }
+.ms .m .test b { color: var(--ink); }
+.pill { font-size: 11px; font-weight: 700; letter-spacing: .05em; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+.pill.good { background: color-mix(in srgb, var(--good) 18%, transparent); color: var(--good); }
+.pill.warn { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
+.pill.stop { background: color-mix(in srgb, var(--stop) 18%, transparent); color: var(--stop); }
+
+.moodbox { margin-top: 14px; }
+.mood { display: grid; gap: 14px; margin-top: 10px; }
+.mood .who { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 14px; align-items: center; }
+@media (max-width: 560px) { .mood .who { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
+.mood .name { font-family: var(--display); font-weight: 800; font-size: 17px; line-height: 1.15; }
+.mood .name small { display: block; font-family: var(--body); font-weight: 400; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.meter { position: relative; display: grid; grid-template-columns: 1fr 1fr 1fr; height: 26px; }
+.meter span { display: grid; place-items: center; font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+.meter .angry { background: color-mix(in srgb, var(--stop) 26%, transparent); color: var(--stop); border-radius: 999px 0 0 999px; }
+.meter .content { background: color-mix(in srgb, var(--shop) 34%, transparent); color: var(--warn); }
+.meter .love { background: color-mix(in srgb, var(--love) 24%, transparent); color: var(--love); border-radius: 0 999px 999px 0; }
+.meter i { position: absolute; top: -5px; bottom: -5px; width: 6px; margin-left: -3px; border-radius: 3px; background: var(--ink); box-shadow: 0 0 0 2px var(--surface); }
+.mood .verdict { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.mood .verdict b { color: var(--ink); }
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">MVP build sheet · one store · no saves, no shop, no progression</div>
+  <h1>Supermarket Sweep MVP</h1>
+  <p class="lede">The smallest version that can tell us whether the game is fun: your shopping frenzy (the list, ramming and stealing), plus the closing shutters and the checkout queue. Big Chonk, a giant waiting outside to be fed, turns the rounds into a 5-round elimination match with one winner. Everything else waits until a playtest says the core is worth building on.</p>
+
+  <div class="receipt" aria-label="The whole game on one receipt">
+    <div class="row"><b>SWEEP MART</b><span>ROUND 1</span></div>
+    <hr>
+    <div class="row"><span>Grab food on your list</span><span>x2 YUM</span></div>
+    <div class="row"><span>Grab snacks</span><span>3 YUM</span></div>
+    <div class="row"><span>Get stuck with yuck food</span><span>-2 YUM</span></div>
+    <div class="row"><span>Throw it or plant it on a rival</span><span>FREE</span></div>
+    <div class="row"><span>Ram trolleys, steal from parked ones</span><span>FREE</span></div>
+    <div class="row"><span>Throw an item, knock a shopper off balance</span><span>1 ITEM</span></div>
+    <div class="row"><span>Check out (tills open at 1:00)</span><span>KEEP IT ALL</span></div>
+    <div class="row"><span>Still inside at closing</span><span>-ALL</span></div>
+    <hr>
+    <div class="row"><span>Feed him worst this round</span><span>EATEN</span></div>
+    <hr>
+    <div class="row"><b>LAST ONE FED WINS</b><span>5 ROUNDS</span></div>
+  </div>
+
+  <h2>What the MVP has to prove</h2>
+  <p>Every feature in the MVP is there to answer one of these five questions. If a playtest says no to one of them, fix that before adding anything.</p>
+  <div class="qs">
+    <div class="q"><b>1. Do players gamble on the shutters?</b><span>Some players should stay for one more item and get caught. If nobody ever does, the shutters are too easy to beat. If most players do, they're too harsh.</span></div>
+    <div class="q"><b>2. Is ramming fun on both ends?</b><span>Ramming someone should feel great, and getting rammed should feel fair rather than cheap.</span></div>
+    <div class="q"><b>3. Does the closing rush happen?</b><span>Queues at the tills, last-second dashes, someone getting shut in. That's the moment people will clip.</span></div>
+    <div class="q"><b>4. Do they press "again"?</b><span>The real test is players starting the next round without being asked.</span></div>
+    <div class="q"><b>5. Can a new player learn it in one round?</b><span>No tutorial and no explaining. If they need telling, the rules are too complicated.</span></div>
+    <div class="q"><b>6. Does Big Chonk make the list matter?</b><span>Players should talk about him, read his shouts and fight over his cravings. If he's just a scoreboard with a face, the character isn't doing its job.</span></div>
+  </div>
+
+  <h2>The rules, on one screen</h2>
+  <div class="timeline">
+    <div class="bar">
+      <div style="flex:20;background:var(--chip);color:var(--ink)"><b>Lobby</b>20 s outside the doors</div>
+      <div style="flex:40;background:var(--shelf)"><b>Shopping</b>Grab, ram, steal</div>
+      <div style="flex:20;background:var(--fridge)"><b>Craving</b>One food x3</div>
+      <div style="flex:20;background:var(--till)"><b>Tills open</b>Check out from 1:00</div>
+      <div style="flex:20;background:linear-gradient(90deg,var(--door) 50%,var(--hot) 50%)"><b>Closing</b>"Closes in 40 s", then the flash sale at 1:30</div>
+      <div style="flex:20;background:linear-gradient(180deg,var(--hot) 30%,var(--stop) 30%);color:#fff"><b style="color:var(--on)">Shutters</b>Coming down, turkey still up</div>
+      <div style="flex:30;background:var(--till)"><b>Feeding</b>Chonk eats, someone gets eaten</div>
+    </div>
+    <div class="ticks"><span>lobby</span><span>0:00</span><span>0:40</span><span>1:00</span><span>1:20</span><span>1:40</span><span>2:00</span><span>+35 s</span></div>
+  </div>
+  <ol class="rules">
+    <li><b>Everything is scored in yum</b>: how much Big Chonk likes it. Bigger numbers are better.</li>
+    <li><b>You get a shopping list of 6 foods</b> when the doors open. They're staples, the food he needs: milk, eggs, bread, fruit and so on. A staple is 2 yum, and <b>4 yum if it's on your list</b>.</li>
+    <li><b>Snacks are 3 yum</b> (crisps, cookies, soda). He loves them. They're never on a list, but they're worth more than any staple that isn't on yours.</li>
+    <li><b>Yuck food is -2 yum</b>: Brussels sprouts, canned peas, spinach, and toilet roll. It's never on a list, and a till scans it against you, so it's ammunition: throw it at someone, or get it into a rival's trolley. It sits on the shelves right beside the food you want, so you pick some up on the way. Toilet roll leaves a streamer of paper wherever it flies. (Toilet roll is in now; the yuck foods come with Big Chonk.)</li>
+    <li><b>You push a trolley.</b> Walk up to a shelf and press E to drop an item in. It holds 20 items, and you move a little slower the fuller it gets.</li>
+    <li><b>You can let go of your trolley</b> (Q) to run faster and carry 2 items, one in each hand. When you grab it again, you keep the newest in your free hand and the other goes into the trolley. While it's parked, anyone can steal from it (hold E).</li>
+    <li><b>Your trolley is a pile, not a list.</b> The screen shows how full it is, never what's in it. Things land in it that you didn't want: thrown in, shaken off a shelf, knocked out of someone else's trolley, or tumbling in when you scrape a shelf. You only hear that SOMETHING landed.</li>
+    <li><b>Dig</b> (R, or the DIG button) to look straight down into your basket and pull out what's on top into your hands. Your own hands show at the bottom of the view holding what you pulled out, highlighted. Pushing takes one hand, so you hold one item while you push and two with your trolley parked. When your hands are full, throw one or tap it to put it back on top of the pile before you dig out more. While you dig you stand still, and anyone can ram you or rob you. Dig, or keep shopping: that's the choice.</li>
+    <li><b>Run your trolley into someone else's</b> and the top item flies out onto the floor for anyone to grab.</li>
+    <li><b>Throw an item</b> (F, or the THROW button) along a real arc toward where you aim: the mouse, or the middle of the screen on a phone. You throw what's in your hand, or else the top of your pile, whatever it is. Dig something out first to throw it on purpose. Whoever it hits is knocked off balance for 1.5 seconds: slowed, unable to grab or sprint. The item lands on the floor for anyone to take.</li>
+    <li><b>Sprint your trolley into a shelf</b> (or a fridge, or the fruit table) and it shakes: 1 to 3 of its items fall into the aisle for anyone to grab.</li>
+    <li><b>Flash sale for the last 30 seconds</b> (1:30 to closing). One golden turkey worth 10 yum appears at the right-hand end of the middle aisle, under a beam of light, just after the store has told everyone to head for the tills. Grab it and get it through a till before the shutters shut, or lose it with everything else.</li>
+    <li><b>Sprint</b> by holding Shift (or the SPRINT button). Holding drains a meter that lasts 3 seconds; letting go refills it, so you can sprint in short bursts.</li>
+    <li><b>Shelves don't restock.</b> Once the milk is gone it's gone, so popular items get fought over and the store empties as the round goes on.</li>
+    <li><b>The tills open at 1:00, halfway through.</b> Nobody can grab two things and leave: everyone shops for the first half.</li>
+    <li><b>Check out at a till.</b> Items scan one by one. Whatever has scanned is safe. There are 3 tills, so at closing time there's a queue.</li>
+    <li><b>The shutters come down over the last 20 seconds.</b> Anything not scanned by 2:00 is lost. Finishing early earns a bonus for every second left.</li>
+    <li><b>Most yum out wins.</b> Top 3 go on the podium, then the next round starts automatically.</li>
+  </ol>
+
+  <h2>Big Chonk and the elimination match</h2>
+  <p>Players aren't shopping for themselves any more. A huge, hungry giant called Big Chonk waits outside the store, and every player gets a list of what he wants to eat. After each round he eats what everyone brought, and whoever fed him worst gets eaten. Five rounds, one winner.</p>
+  <p>Underneath, the round is the one you already have: the list becomes his cravings, the till is how food gets out to him, and the results screen becomes his mood meter. The playtest still answers the same questions about the round, plus one more: does a character make players care about their list?</p>
+
+  <h3 style="font-family:var(--display);font-size:20px;margin:18px 0 4px">The match</h3>
+  <ol class="rules">
+    <li><b>A match is 5 rounds.</b> Each round is the 2-minute shopping round as it is now, then the feeding.</li>
+    <li><b>Chonk scores what each player brings him.</b> His score is yum: food on your list counts double, snacks count 3, any other staple 2, and yuck food counts against you. Shut in by the shutters means you bring him nothing.</li>
+    <li><b>Rounds 1 to 4 each eliminate the players who fed him worst.</b> The cuts are sized so that exactly 3 players reach round 5, with most of the cuts late, so a bad first round isn't the end.</li>
+    <li><b>Round 5 is the final.</b> The 3 survivors are ranked 1st, 2nd and 3rd on a podium. Only 1st is the winner: crowned, and carried around by Chonk.</li>
+    <li><b>Ties</b> go to whoever checked out first.</li>
+    <li><b>With 3 players or fewer</b>, nobody is eliminated and round 5 decides the podium. In Studio, the admin start runs the match solo.</li>
+    <li><b>Players who join mid-match</b> wait in the stands until the next match.</li>
+  </ol>
+
+  <div class="tablebox"><table>
+    <thead><tr><th>Players</th><th>Cut after round 1</th><th>Round 2</th><th>Round 3</th><th>Round 4</th><th>In the final</th></tr></thead>
+    <tbody>
+      <tr><td class="num">12</td><td class="num">2</td><td class="num">2</td><td class="num">2</td><td class="num">3</td><td class="num">3</td></tr>
+      <tr><td class="num">10</td><td class="num">1</td><td class="num">2</td><td class="num">2</td><td class="num">2</td><td class="num">3</td></tr>
+      <tr><td class="num">8</td><td class="num">1</td><td class="num">1</td><td class="num">1</td><td class="num">2</td><td class="num">3</td></tr>
+      <tr><td class="num">6</td><td class="num">0</td><td class="num">1</td><td class="num">1</td><td class="num">1</td><td class="num">3</td></tr>
+      <tr><td class="num">4</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">1</td><td class="num">3</td></tr>
+      <tr><td class="num">2 or 3</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">all</td></tr>
+    </tbody>
+  </table></div>
+  <p style="color:var(--muted);font-size:14px">The rule behind the table: the players above 3 are spread over rounds 1 to 4, with any remainder falling in the later rounds. A match runs about 13 to 14 minutes (5 rounds of 2:00, plus about 35 s of feeding each).</p>
+
+  <h3 style="font-family:var(--display);font-size:20px;margin:18px 0 4px">During the round</h3>
+  <div class="grid2">
+    <div class="box"><h4>Yuck food: things he hates</h4><ul>
+      <li>Chonk always hates the same few: <b>Brussels sprouts, canned peas, spinach</b>, and toilet roll. Each is -2 yum. They never change, so a child learns them once. This replaces the earlier idea of 2 new hated foods every round.</li>
+      <li><b>Stocked next to the good stuff:</b> sprouts beside the fruit, peas beside the crisps and cookies, spinach in the fridges beside the steak. Everyone passes yuck on the way to what they want, so everyone has ammunition.</li>
+      <li><b>Sabotage, two ways:</b> a thrown item that lands in someone's trolley goes into it, and holding E on a rival's parked trolley with yuck in your hand plants it there (the reverse of stealing). Either way, the till scans it against them.</li>
+      <li>Feeding him one makes him gag and spit it back. The counter is digging it out of your trolley before you check out.</li>
+      <li><b>Not in the mood:</b> each round he's tired of one food he normally likes ("NO PIZZA TODAY!"), announced at the doors and shown on the HUD. It's on nobody's list that round and counts -1 yum: a small minus, less than yuck.</li>
+    </ul></div>
+    <div class="box"><h4>Cravings change</h4><ul>
+      <li>At 0:40, Chonk suddenly craves one kind of food. For the rest of the round it's worth triple to everyone. (Moved from 1:00 so it doesn't land on top of the tills opening.)</li>
+      <li>Announced by Chonk himself, and the craving is marked on the HUD and over its shelf.</li>
+      <li>Everyone changes direction at once, which is the point.</li>
+      <li>The flash sale stays in the last 30 seconds (1:30), so the craving owns the middle of the round and the turkey owns the end.</li>
+    </ul></div>
+    <div class="box"><h4>He shouts at you</h4><ul>
+      <li>Chonk stands outside the front window, visible from inside the store.</li>
+      <li>Speech bubbles over him and lines on the HUD, by name: "SAM! WHERE'S MY CHEESE?"</li>
+      <li>He gets angrier as the clock runs down. In the last 20 seconds he bangs on the window and the glass shakes.</li>
+      <li>He reacts to what happens: cheering a big ram, groaning when someone grabs his hated food.</li>
+    </ul></div>
+    <div class="box"><h4>After you're eliminated</h4><ul>
+      <li><b>Built first: spectating.</b> Eaten players (and anyone who joins mid-match) watch the survivors: the camera follows one, and arrows switch between them.</li>
+      <li><b>Still recommended:</b> eliminated players don't just watch. They come back into the store as Chonk's pests: they can't shop, but they can throw yuck food at the survivors.</li>
+      <li>Kids don't sit through 10 minutes of watching, and pests make the late rounds more chaotic, not less.</li>
+      <li>The alternative is spectating from the stands. To decide before building round 2 of the match.</li>
+    </ul></div>
+  </div>
+
+  <h3 style="font-family:var(--display);font-size:20px;margin:18px 0 4px">The feeding (after every round)</h3>
+  <ol class="rules">
+    <li><b>Everyone lines up</b> on a stage in front of Chonk, outside the store, each holding their shopping bag.</li>
+    <li><b>Chonk grabs each bag and dumps it into his mouth,</b> and everyone waits for his reaction: a happy belly drum, a shrug, or a gag and spit for hated food.</li>
+    <li><b>His mood meter is the score.</b> Over each player's head, a meter runs from <b>angry</b> through <b>content</b> to <b>love</b>. The needle moves as each item goes in: up for food he wants, up a lot for list food, and back down with a gag for food he hates. Where it stops is that player's result for the round. The exact value shows small beside it, but the meter is what players read.</li>
+    <li><b>The safe players go fast</b> (about 1.5 s each). The players in danger are saved for last, for suspense: their needle wobbles around the edge of angry before it settles.</li>
+    <li><b>Then he eats the eliminated players.</b> A cartoon gulp, and he spits them out into the stands. Nothing they own is lost; it's a joke, not a punishment.</li>
+    <li><b>After round 5</b>, the podium: 3rd, 2nd, then the winner, who Chonk lifts up and carries.</li>
+  </ol>
+
+  <div class="box moodbox"><h4>The mood meter, after a round</h4>
+    <div class="mood" role="img" aria-label="Example mood meters: Mia fed him best and lands at the far end of love. Sam lands in content. Jo fed him little, lands in angry and is eaten.">
+      <div class="who"><div class="name">Mia<small>41 yum, best this round</small></div><div>
+        <div class="meter"><span class="angry">Angry</span><span class="content">Content</span><span class="love">Love</span><i style="left:97%"></i></div>
+        <div class="verdict"><b>Belly drum.</b> The best feeder of the round always fills the meter.</div></div></div>
+      <div class="who"><div class="name">Sam<small>24 yum</small></div><div>
+        <div class="meter"><span class="angry">Angry</span><span class="content">Content</span><span class="love">Love</span><i style="left:57%"></i></div>
+        <div class="verdict"><b>A shrug.</b> Safe this round.</div></div></div>
+      <div class="who"><div class="name">Jo<small>6 yum, fed him food he hates</small></div><div>
+        <div class="meter"><span class="angry">Angry</span><span class="content">Content</span><span class="love">Love</span><i style="left:12%"></i></div>
+        <div class="verdict"><b>Gag and spit, then a gulp.</b> Eaten players always end in angry.</div></div></div>
+    </div>
+    <p style="max-width:none;margin-top:14px"><b>Where the needle stops:</b> how well you fed him compared with the best feeder this round. The best feeder sits at the far end of love. Bringing nothing (shut in) or less than nothing (hated food) leaves the needle at the far end of angry. Anyone being eaten always lands in angry, so a child always sees why they were eaten. Survivors can still end in angry, which is the "phew" moment. Until eliminations arrive in M6, nobody is eaten and the meter is only the comparison.</p>
+  </div>
+
+  <h2>Throwing items</h2>
+  <p>Added after the first playtest, and reworked after the second: the first version locked on and mostly dropped the item at your feet. Throwing gives players a way to dump extras from a full trolley, and a way to slow a rival down so somebody else gets to a scarce item first.</p>
+  <div class="grid2">
+    <div class="box"><h4>How it works</h4><ul>
+      <li><b>What you throw:</b> the item in your hand if you're holding one, otherwise the top of your pile. To throw something specific, dig it out first.</li>
+      <li><b>You aim it.</b> It flies in a real arc toward your mouse (or the middle of the screen on a phone), and hits whoever it passes close to. A shopper within 12&deg; of your aim gets light aim assist, with a lead for where they're running, because hitting a moving target on a phone is hard.</li>
+      <li><b>A hit knocks them off balance for 1.5 s:</b> slowed to 40%, a wobble and dizzy stars, no grabbing and no sprinting. It doesn't take any of their items; that's what ramming does.</li>
+      <li><b>The thrown item lands on the floor</b> for anyone to grab, the thrower included.</li>
+      <li>The client sends only an aim direction. The server clamps it, flies the item and decides who's hit; every screen draws the same arc.</li>
+    </ul></div>
+    <div class="box risk"><h4>Guardrails</h4><ul>
+      <li><b>5 s hit immunity, counted for the player being hit.</b> A crowd can't keep one child knocked over by taking turns, however many people are throwing. A cooldown on the thrower alone wouldn't stop that.</li>
+      <li><b>Tills are safe.</b> Nobody can be hit while standing on a till pad, so a queue can't be wrecked at closing. Ramming and stealing are off there too.</li>
+      <li><b>Throwing costs an item.</b> It's cheap, but a player who throws all round goes home with less, so constant throwing doesn't pay.</li>
+      <li><b>2 s between throws</b> so it never turns into spam.</li>
+    </ul></div>
+  </div>
+  <div class="box" style="margin-top:14px"><h4>Ramming and throwing do different jobs</h4>
+    <p style="max-width:none">Ramming is up close, needs speed, and <b>takes</b> an item. Throwing works at range, costs you an item, and <b>slows</b> a shopper. That split keeps either one from making the other pointless. If playtests show everyone throwing and nobody ramming, lengthen the throw cooldown first.</p>
+  </div>
+
+  <h2>Shaking shelves</h2>
+  <p>Ram a shelf hard enough and it wobbles and drops a few of its own items onto the floor. It fits the chaos and costs little to build. Planned for milestone 4.</p>
+  <div class="grid2">
+    <div class="box"><h4>How it works</h4><ul>
+      <li><b>Sprint into a shelf</b> with your trolley and the shelf section you hit shakes. It needs a sprint, not a plain push: otherwise just driving up to a shelf to grab something would knock its stock off every time.</li>
+      <li><b>1 to 3 items from that section fall</b> into the aisle you're in. Only items actually on that section, so it never adds stock: shelves still never restock.</li>
+      <li><b>Fallen items are anybody's.</b> You shook them loose, but a shopper standing in the aisle can scoop them first. That makes it a gamble, not a shortcut.</li>
+      <li>The shake is drawn on each player's screen from one message; the server only decides what falls.</li>
+    </ul></div>
+    <div class="box risk"><h4>Things to watch</h4><ul>
+      <li><b>One shake per section every ~6 s.</b> Without it, a player parks at the steak and rams it empty.</li>
+      <li><b>It empties the store faster.</b> Scarcity is what makes the fights matter, so check the store isn't bare by the 2-minute mark.</li>
+      <li><b>A messy floor is the point.</b> If grabbing off the floor ever beats grabbing off shelves, items need to fall further away.</li>
+      <li><b>Later, maybe:</b> a falling item bonks whoever is underneath, using the same off-balance rules as a throw.</li>
+    </ul></div>
+  </div>
+
+  <h2>Art direction</h2>
+  <p>A chaotic, goofy, low-poly look, with custom shopper characters instead of standard Roblox avatars. Nothing about it is needed to find out whether the round is fun, so it comes after the playtest. The grey box answers the fun question.</p>
+  <div class="grid2">
+    <div class="box"><h4>Why it works</h4><ul>
+      <li><b>Goofy matches the game.</b> Wobbly shoppers, oversized trolleys and items flying everywhere read as funny rather than mean, which suits players knocking each other over.</li>
+      <li><b>Low poly is cheap twice:</b> quick to make, and light on phones, where most of the audience plays.</li>
+      <li><b>It looks like its own game</b> in a thumbnail, where most Roblox games look like Roblox.</li>
+      <li><b>Characters become the shop.</b> A granny in curlers, a toddler, a bodybuilder, a dad in socks and sandals: shoppers and their outfits are the cosmetic catalogue.</li>
+    </ul></div>
+    <div class="box risk"><h4>The costs</h4><ul>
+      <li><b>Players lose their own avatars,</b> which many care about. Show their name on their shopper, and let them choose and dress their shopper, so it still feels like theirs.</li>
+      <li><b>Custom characters need their own animations.</b> Build them on the standard R15 skeleton so Roblox's walk, run and emotes still work, and only the look is custom.</li>
+      <li><b>Bigger or odd shapes change the collisions</b> that ramming, throwing and the tills were tuned on. Keep the collision body the standard size and make only the visible model goofy.</li>
+      <li><b>It's the biggest art job in the plan.</b> Do the store and items in low poly first, then the characters, once the playtest says the game is worth it.</li>
+    </ul></div>
+  </div>
+
+  <h2>The store</h2>
+  <p>One store, built for 8 to 12 players, about 160 by 150 studs. There are two blocks of six parallel aisles with a cross aisle between them. Each aisle is about 13 studs wide, enough for two trolleys to pass. The front wall, tills and lobby stay where they were; the store grew backwards, so the fridges are the longest run from the tills.</p>
+  <div class="planbox">
+    <svg id="plan" viewBox="0 0 640 430" role="img" aria-label="Floor plan of the store: fridges along the back wall, a back block of six aisles, a cross aisle, a front block of six aisles with a produce island beside it, three tills at the front, an entrance on the left and an exit with the shutter on the right.">
+      <rect x="20" y="20" width="600" height="330" rx="10" fill="var(--floor)" stroke="var(--line)" stroke-width="3"/>
+      <!-- fridges back wall -->
+      <rect x="40" y="28" width="560" height="20" rx="5" fill="var(--fridge)"/>
+      <text x="320" y="43" text-anchor="middle">Fridges along the back: milk, cheese, eggs, steak</text>
+      <!-- back block -->
+      <g fill="var(--shelf)">
+        <rect x="159" y="62" width="22" height="72" rx="4"/>
+        <rect x="230" y="62" width="22" height="72" rx="4"/>
+        <rect x="301" y="62" width="22" height="72" rx="4"/>
+        <rect x="373" y="62" width="22" height="72" rx="4"/>
+        <rect x="444" y="62" width="22" height="72" rx="4"/>
+        <rect x="515" y="62" width="22" height="72" rx="4"/>
+      </g>
+      <text x="100" y="102" text-anchor="middle" class="lab">Back aisles</text>
+      <!-- cross aisle -->
+      <text x="348" y="160" text-anchor="middle" class="lab">Cross aisle</text>
+      <circle cx="582" cy="156" r="18" fill="var(--hot)"/>
+      <text x="582" y="152" text-anchor="middle">Flash</text>
+      <text x="582" y="166" text-anchor="middle">sale</text>
+      <!-- front block -->
+      <g fill="var(--shelf)">
+        <rect x="159" y="178" width="22" height="72" rx="4"/>
+        <rect x="230" y="178" width="22" height="72" rx="4"/>
+        <rect x="301" y="178" width="22" height="72" rx="4"/>
+        <rect x="373" y="178" width="22" height="72" rx="4"/>
+        <rect x="444" y="178" width="22" height="72" rx="4"/>
+        <rect x="515" y="178" width="22" height="72" rx="4"/>
+      </g>
+      <!-- produce island -->
+      <rect x="54" y="190" width="38" height="58" rx="10" fill="var(--till)"/>
+      <text x="73" y="270" text-anchor="middle" class="lab">Produce</text>
+      <!-- tills -->
+      <g fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="4 4">
+        <line x1="376" y1="280" x2="376" y2="312"/><line x1="414" y1="280" x2="414" y2="312"/><line x1="451" y1="280" x2="451" y2="312"/><line x1="489" y1="280" x2="489" y2="312"/>
+      </g>
+      <g fill="var(--till)">
+        <rect x="384" y="298" width="22" height="12" rx="3"/>
+        <rect x="422" y="298" width="22" height="12" rx="3"/>
+        <rect x="459" y="298" width="22" height="12" rx="3"/>
+      </g>
+      <line x1="245" y1="315" x2="618" y2="315" stroke="var(--door)" stroke-width="3"/>
+      <text x="300" y="306" text-anchor="middle" class="big">3 tills</text>
+      <!-- entrance -->
+      <rect x="103" y="342" width="52" height="16" rx="3" fill="var(--till)"/>
+      <text x="129" y="380" text-anchor="middle" class="big">Entrance</text>
+      <text x="129" y="396" text-anchor="middle" class="lab">teleported in at doors open</text>
+      <!-- window -->
+      <rect x="170" y="344" width="300" height="12" rx="3" fill="var(--fridge)"/>
+      <text x="320" y="380" text-anchor="middle" class="lab">Window + shutter</text>
+      <!-- exit -->
+      <rect x="512" y="342" width="36" height="16" rx="3" fill="var(--door)"/>
+      <text x="545" y="380" text-anchor="middle" class="big">Exit</text>
+      <text x="545" y="396" text-anchor="middle" class="lab">only through the tills</text>
+      <text x="320" y="420" text-anchor="middle" class="lab">Lobby outside the front: players wait here between rounds</text>
+    </svg>
+  </div>
+  <div class="grid2" style="margin-top:12px">
+    <div class="box"><h4>Why this layout</h4><ul>
+      <li><b>Expensive items at the back</b> (fridges, flash-sale spot) and the tills at the front, so the best stuff is the furthest run from the exit.</li>
+      <li><b>One way in, and the only way out is through the tills</b>, so the queue can't be skipped.</li>
+      <li><b>The tills sit in a bottleneck</b> by the exit, so trolleys pile up there at closing.</li>
+    </ul></div>
+    <div class="box"><h4>Items (12 kinds, ~60 on the shelves)</h4><ul>
+      <li>Staples, 2 yum (4 on your list): bananas, apples, bread, cereal, and milk, cheese, eggs, steak in the back fridges. The only food on lists.</li>
+      <li>Snacks, 3 yum: crisps, cookies, soda. Never on a list.</li>
+      <li>Yuck food, -2 yum: toilet roll now (thrown first, leaves a paper streamer); Brussels sprouts, canned peas and spinach with Big Chonk, each stocked beside food players want.</li>
+      <li>Flash sale, 10 yum: one golden turkey for the last 30 seconds</li>
+      <li>Simple coloured box shapes with a picture on the front are enough for the MVP.</li>
+    </ul></div>
+  </div>
+
+  <h2>In the MVP, and out of it</h2>
+  <div class="inout">
+    <div class="box in"><h4>In</h4><ul>
+      <li>One store, one round loop that repeats automatically</li>
+      <li>Shopping lists, item pickup, a trolley with 20 slots that slows as it fills</li>
+      <li>Letting go of the trolley, carrying 2 items by hand, stealing from parked trolleys</li>
+      <li>Ramming knocks one item out</li>
+      <li>Throwing an item in an aimed arc: dumps extras, knocks a shopper off balance</li>
+      <li>Digging through your trolley: a top-down look into the basket, pull out what's on top</li>
+      <li>Junk landing in trolleys from throws, shakes, rams, scrapes and Chonk's tantrum</li>
+      <li>Sprint, held, with a meter</li>
+      <li>3 tills that open halfway, with scan time, shutters, early-exit bonus</li>
+      <li>One flash sale per round (cheap to build and a big moment)</li>
+      <li>Big Chonk: his list, yuck food beside the good food (thrown or planted into rivals' trolleys), a craving change at 1:00, shouting, and the feeding after each round, scored on his mood meter</li>
+      <li>The 5-round elimination match, with a 1st, 2nd and 3rd podium and one winner</li>
+      <li>HUD: list with ticks, trolley yum, timer, closing warnings, results podium</li>
+      <li>Tannoy messages and 4 key sounds: grab, ram, scan, shutter</li>
+      <li>Admin buttons: start round, skip to closing, shorten timer, give me items</li>
+      <li>A round log: who grabbed, rammed, stole, checked out or got caught</li>
+    </ul></div>
+    <div class="box out"><h4>Out, until a playtest earns it</h4><ul>
+      <li>Saving, coins, levels, unlocks</li>
+      <li>Shop, passes, crates, any Robux at all</li>
+      <li>More stores</li>
+      <li>Basket and flatbed choice</li>
+      <li>Frozen, fragile, the manager, wet floors, power cuts</li>
+      <li>NPC shoppers and bots (test with real players). Big Chonk is the one NPC</li>
+      <li>Other customers (a dragon, a giant baby, an alien), your own pet to raise, team mode</li>
+      <li>Self-checkout, express lane</li>
+      <li>Real item models, polish, effects, music</li>
+      <li>The low-poly art pass and custom shopper characters (planned, after the playtest)</li>
+      <li>Daily rewards, quests, leaderboards</li>
+    </ul></div>
+  </div>
+
+  <h2>Numbers to start with</h2>
+  <p>Put all of these in one Config module so a playtest can be retuned in seconds. These are first guesses.</p>
+  <div class="tablebox"><table>
+    <thead><tr><th>Setting</th><th>Start at</th><th>What it changes</th></tr></thead>
+    <tbody>
+      <tr><td><code>roundSeconds</code></td><td class="num">120</td><td>Round length. Was 180; that dragged in a solo test. A full server empties the shelves faster, so try this first before growing the store.</td></tr>
+      <tr><td><code>closingWarnAt</code></td><td class="num">80</td><td>When the "store closing" announcements start.</td></tr>
+      <tr><td><code>shutterStartsAt</code></td><td class="num">100</td><td>When the shutters start coming down.</td></tr>
+      <tr><td><code>flashSaleAt</code> / <code>flashSaleSeconds</code></td><td class="num">90 / 30</td><td>When the golden turkey (10 yum) appears and how long it stays. Set from the round length so it's always the last 30 s: a lure back in after the closing warning.</td></tr>
+      <tr><td><code>shakeMinSpeed</code> / <code>shakeCooldown</code></td><td class="num">17 / 6 s</td><td>Speed to shake a shelf (above any plain push, so it takes a sprint), and how often one section can be shaken.</td></tr>
+      <tr><td><code>yum</code></td><td class="num">2 / 3 / -2</td><td>Staple / snack / yuck, per item. The order a child has to learn: on your list (4) &gt; snack (3) &gt; other staple (2) &gt; yuck.</td></tr>
+      <tr><td><code>listSize</code> / <code>listPool</code></td><td class="num">6 / 7</td><td>Lists are drawn from 7 of the 8 staples, so lists overlap and players fight over the same shelves.</td></tr>
+      <tr><td><code>listMultiplier</code></td><td class="num">2</td><td>How much list food is worth compared with the same food off your list.</td></tr>
+      <tr><td><code>trolleyCapacity</code></td><td class="num">20</td><td>Bigger means more greed and longer scans.</td></tr>
+      <tr><td><code>walkSpeed</code> / <code>pushSpeed</code></td><td class="num">20 / 16 to 12</td><td>Running without a trolley vs pushing one (slower as it fills).</td></tr>
+      <tr><td><code>handSlots</code></td><td class="num">2</td><td>Items you can carry with the trolley parked.</td></tr>
+      <tr><td><code>scanSeconds</code></td><td class="num">0.4</td><td>Per item. A full trolley takes 8 s at the till.</td></tr>
+      <tr><td><code>tills</code></td><td class="num">3</td><td>Fewer tills means longer queues at closing.</td></tr>
+      <tr><td><code>tillsOpenAt</code></td><td class="num">60</td><td>The tills are shut for the first half of the round, so everyone shops and everyone checks out in the same minute.</td></tr>
+      <tr><td><code>ramMinSpeed</code> / <code>ramCooldown</code></td><td class="num">10 / 3 s</td><td>How fast you must be moving to knock an item out, and how often one trolley can be hit.</td></tr>
+      <tr><td><code>stealHold</code></td><td class="num">0.5 s</td><td>Hold time to take an item from a parked trolley.</td></tr>
+      <tr><td><code>throwSpeed</code> / <code>throwGravity</code></td><td class="num">75 / 40</td><td>Launch speed and how fast it drops: a level throw from chest height carries about 35 studs.</td></tr>
+      <tr><td><code>throwHitRadius</code></td><td class="num">2.6</td><td>How close the item must pass to a shopper's body to hit.</td></tr>
+      <tr><td><code>throwAssistCone</code> / <code>throwRange</code></td><td class="num">12&deg; / 40</td><td>Aim assist: how close to your aim a shopper must be, and how far away, to have the throw steered at them.</td></tr>
+      <tr><td><code>throwCooldown</code></td><td class="num">2 s</td><td>Time between your throws.</td></tr>
+      <tr><td><code>stumbleSeconds</code> / <code>stumbleSpeed</code></td><td class="num">1.5 s / 40%</td><td>How long a hit lasts and how slow it leaves you. No grabbing or sprinting while stumbling.</td></tr>
+      <tr><td><code>hitImmunity</code></td><td class="num">5 s</td><td>After a hit, nobody can knock you off balance again for this long.</td></tr>
+      <tr><td><code>sprintMultiplier</code> / <code>sprintStamina</code> / <code>sprintRefill</code></td><td class="num">1.5x / 3 s / 6 s</td><td>Sprint speed, how long a full meter lasts held down, and how long it takes to refill from empty.</td></tr>
+      <tr><td><code>earlyBonusPerSecond</code></td><td class="num">1%</td><td>Bonus for checking out early. The tills open with 60 s left, so +60% is the most anyone gets. A bag worth nothing or less gets no bonus.</td></tr>
+      <tr><td><code>minPlayers</code></td><td class="num">2</td><td>Players needed for a round to start.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Build milestones</h2>
+  <p>Every milestone ends with something you can play. Test it before starting the next one.</p>
+  <div class="ms">
+    <div class="m"><div class="tag">M1<small>Shop and leave</small></div><div>
+      <span class="pill good">PLAYED</span> Grey-box store, round timer, lists, picking items up, the tills, the shutters, results. Later widened to two blocks of six aisles.
+      <div class="test"><b>Test alone:</b> is it tense to grab items while the clock runs, and does the shutter feel close?</div>
+    </div></div>
+    <div class="m"><div class="tag">M2<small>The trolley</small></div><div>
+      <span class="pill good">PLAYED</span> Pushing a trolley, 20 slots, slowing down as it fills, letting go and carrying 2 by hand. Plus a held sprint with a meter.
+      <div class="test"><b>Test:</b> does pushing feel good on keyboard and on a phone? This is the biggest risk, so take time on it.</div>
+    </div></div>
+    <div class="m"><div class="tag">M3<small>Trolley fights</small></div><div>
+      <span class="pill warn">BUILT</span> Ramming, stealing from parked trolleys, aimed throws that knock shoppers off balance, taking items out of your trolley, items lying on the floor, the warning when someone steals from you.
+      <div class="test"><b>Test with 4 or more players:</b> do fights happen without being forced? Does losing an item, or getting hit, feel fair? Do throws open up scarce items for someone else, the way they're meant to?</div>
+    </div></div>
+    <div class="m"><div class="tag">M4<small>The moment</small></div><div>
+      <span class="pill good">PLAYED</span> The flash sale, shaking shelves, sounds (grab, ram, shelf, throw, hit, scan, checkout, alarm, shutters, sale, stolen), dizzy stars and a camera jolt on a hit, items hopping out on a ram, a 2-minute round. Played solo: sounds load, shelves shake. Since then: the flash sale moved to the last 30 seconds, scores became yum (lists are staples, snacks are worth more, toilet roll counts against you and leaves a paper streamer when thrown), and the tills open at 1:00.
+      <div class="test"><b>Test:</b> does the last 30 seconds feel like a rush?</div>
+    </div></div>
+    <div class="m"><div class="tag">M5<small>Big Chonk</small></div><div>
+      <span class="pill warn">BUILT</span> In grey box, not yet played. Chonk outside the window (a placeholder ball until the art), the yuck foods (sprouts, peas, spinach) stocked beside the good food, items landing in trolleys when thrown, planting yuck in a parked trolley, the not-in-the-mood food, the craving at 0:40, his shouting by name, banging on the glass, and the feeding after each round: the line-up, his verdicts, and his mood meter (angry, content, love) as the score.
+      <div class="test"><b>Test:</b> do players read his list and his shouts? Does the feeding feel like a payoff, or like waiting?</div>
+    </div></div>
+    <div class="m"><div class="tag">M6<small>Elimination match</small></div><div>
+      <span class="pill warn">BUILT</span> In grey box, not yet played. 5 rounds, the cuts from the table above, Chonk eating the eliminated, the stands (pests not built yet), the final podium and the winner's crown, carried on Chonk's head.
+      <div class="test"><b>Test:</b> do eliminated players stay in the server for the next match? Is the final round the tensest one?</div>
+    </div></div>
+    <div class="m"><div class="tag">M6b<small>Chaos and the rummage</small></div><div>
+      <span class="pill warn">BUILT</span> Not yet played. The trolley becomes a pile you dig through: no contents list, a top-down dig view that stands you still, throws take the top of the pile. Junk lands in trolleys from throws, shaken shelves, rams, scraping a shelf, and Chonk's tantrum just after the closing warning, when every shelf drops an item.
+      <div class="test"><b>Later, with the item models:</b> hands-on digging. Press and hold an item to grab it and drag it around the pile, shoving things aside to reach what's underneath, or lift it out into your hand.</div>
+      <div class="test"><b>Test:</b> do players stop to dig, and does it feel like a gamble rather than a chore? Does the store feel chaotic in the last 40 seconds?</div>
+    </div></div>
+    <div class="m"><div class="tag">M7<small>Real playtest</small></div><div>
+      6 to 10 players, at least 2 full matches, a mix of players who know the game and who don't. Fill in the scorecard below, tune the Config, run it again.
+      <div class="test"><b>Decide:</b> build it out, change the core, or move on to Kitchen Counter.</div>
+    </div></div>
+  </div>
+
+  <h2>Playtest scorecard</h2>
+  <p>Read these off the round log, and watch players' faces. Targets are where a fun round probably lands.</p>
+  <div class="tablebox"><table>
+    <thead><tr><th>Measure</th><th>Target</th><th>If it's off</th></tr></thead>
+    <tbody>
+      <tr><td>Players caught by the shutters each round</td><td class="num">10 to 30%</td><td>None: start the shutters earlier or make scanning slower. Most: give more warning.</td></tr>
+      <tr><td>Rams per player per round</td><td class="num">2 to 6</td><td>Too few: smaller store, more overlap between lists. Too many: longer cooldown.</td></tr>
+      <tr><td>Steals per round</td><td class="num">a few</td><td>None: trolleys need to be left alone more (higher run speed). Lots: longer hold time.</td></tr>
+      <tr><td>Throws per player per round</td><td class="num">3 to 8</td><td>Too few: longer range or shorter cooldown. Too many, or players only throwing: longer cooldown, or make the thrown item cost more.</td></tr>
+      <tr><td>Hits that change who gets a scarce item</td><td class="num">most rounds</td><td>Never: the stumble is too short to matter, or items aren't scarce enough. Lengthen it a little or cut stock.</td></tr>
+      <tr><td>One player getting hit over and over</td><td class="num">never</td><td>Lengthen the hit immunity. Being picked on is the fastest way to lose a young player.</td></tr>
+      <tr><td>Queue at closing</td><td class="num">2+ players waiting</td><td>No queue: remove a till.</td></tr>
+      <tr><td>Players checking out in the last 20 s</td><td class="num">over half</td><td>Everyone leaves early: lower the early bonus or make items worth more.</td></tr>
+      <tr><td>Score gap between 1st and last</td><td class="num">under 3x</td><td>Bigger: the winner is snowballing, so cap trolley size or add more items.</td></tr>
+      <tr><td>Matches played before leaving</td><td class="num">2+</td><td>Fewer: the core isn't fun yet. Don't add features, fix this.</td></tr>
+      <tr><td>Digging per player per round</td><td class="num">2 to 20 s</td><td>None: not enough junk lands, raise the scrape chance or the catch radius. Lots: digging eats the round.</td></tr>
+      <tr><td>Yuck food fed to Chonk per round</td><td class="num">a few, by sabotage</td><td>None: sabotage is too hard (more yuck stock, easier throws into trolleys). Most players: it's too easy, or yuck doesn't look yucky enough to spot in your own trolley.</td></tr>
+      <tr><td>Eliminated players still in the server at the next match</td><td class="num">most</td><td>They leave: being out is boring. Try the pests if you chose the stands, or make the match shorter.</td></tr>
+      <tr><td>Players can say where they landed on the mood meter</td><td class="num">yes, unprompted</td><td>They can't: the reveal is too fast or the zones are unclear. Slow the danger reveals down and make the zone labels bigger.</td></tr>
+      <tr><td>New players understand round 1</td><td class="num">yes, unprompted</td><td>Simplify the HUD or the rules before anything else.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Tech notes</h2>
+  <div class="grid2">
+    <div class="box"><h4>Setup (from your new-game checklist)</h4><ul>
+      <li>Rojo project, so the repo is the game.</li>
+      <li>One Config, one Remotes, one Theme module.</li>
+      <li>Admin console on day one, checked on the server against an allowlist.</li>
+      <li>No DataStore in the MVP at all: nothing to save, nothing to break.</li>
+      <li>StreamingEnabled off: one small map.</li>
+    </ul></div>
+    <div class="box"><h4>Who decides what</h4><ul>
+      <li>The server owns items, lists, trolley contents, scores and the clock.</li>
+      <li>The trolley is welded in front of the player's character, so pushing it is smooth on their own screen.</li>
+      <li>The server decides a ram from the two trolleys' speed and contact, never from what a client says.</li>
+      <li>A throw sends no target: the server picks who's hit from its own positions, and owns the stumble and the immunity clock.</li>
+      <li>Items on the floor and on shelves are simple anchored parts the server moves.</li>
+    </ul></div>
+  </div>
+</div>
